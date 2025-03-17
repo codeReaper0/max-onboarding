@@ -1,0 +1,36 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+	  "components/*": [
+		"./components/*"
+	  ],
+	  "lib/*": [
+		"./lib/*"
+	  ],
+	  "icons/*": [
+		"./assets/icons/*"
+	  ],
+	  "images/*": [
+		"./assets/images/*"
+	  ],
+	  "assets/*": [
+		"./assets/*"
+	  ],
+	  "types/*": [
+		"./types/*"
+	  ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "nativewind-env.d.ts"
+  ]
+}
