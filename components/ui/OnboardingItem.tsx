@@ -107,7 +107,7 @@ export const OnboardingItem: React.FC<OnboardingItemProps> = ({
             <TouchableOpacity
               onPress={() => {
                 finishOnboarding();
-                // router.push("/login");
+                router.push("/login");
               }}
               className="flex-1 items-center justify-center bg-black py-4 rounded-2xl"
             >
@@ -117,7 +117,7 @@ export const OnboardingItem: React.FC<OnboardingItemProps> = ({
             <TouchableOpacity
               onPress={() => {
                 finishOnboarding();
-                // router.push("/register");
+                router.push("/register");
               }}
               className="flex-1 items-center justify-center bg-black py-4 rounded-2xl"
             >

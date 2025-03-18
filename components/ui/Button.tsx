@@ -18,8 +18,8 @@ const Button: React.FC<ButtonProps> = ({
   disabled = false,
 }) => {
   const defaultClasses =
-    "flex h-14 px-6 justify-center items-center gap-2 rounded-2xl bg-primary disabled:bg-brand-neutral";
-  const defaultTextClasses = "text-white text-lg font-interSemiBold";
+    "flex h-14 px-6 justify-center items-center gap-2 rounded-[32px] bg-primary disabled:bg-brand-neutral disabled:text-black";
+  const defaultTextClasses = "text-black text-lg font-interSemiBold";
 
   return (
     <TouchableOpacity

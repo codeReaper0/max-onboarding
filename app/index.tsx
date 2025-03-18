@@ -49,7 +49,7 @@ export default function Index() {
 
   const handleSkip = useCallback(async () => {
     await AsyncStorage.setItem("hasSeenOnboarding", "true");
-    // router.push("/login");
+    router.push("/login");
   }, [router]);
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export default function Index() {
     // AsyncStorage.setItem("hasSeenOnboarding", "false");
     if (hasSeenOnboarding !== null) {
       if (hasSeenOnboarding) {
-        router.replace("/");
+        router.replace("/login");
       }
     }
   }, [hasSeenOnboarding, router]);
