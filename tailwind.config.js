@@ -21,9 +21,7 @@ module.exports = {
         robotoMonoBold: ["RobotoMono-Bold", "monospace"],
       },
       colors: {
-        primary: "#42186C",
-        secondary: "#F5C200",
-        tertiary: "#230346",
+        primary: "#F5C200",
         background: {light: "#F4F4F4", neutral: "#D6D6D6", dark: "#130423"},
         success: {light: "#EBF5EE", neutral: "#08AA3B"},
         warning: {veryLight: "#FFFAE7", light: "#FFE687", medium: "#e0b202"},
