@@ -120,7 +120,7 @@ const Toast = React.forwardRef<IToast, Omit<Props, "ref">>(
 
     function generateBackgroundColor() {
       if (config?.type === "success") {
-        return "#42186C";
+        return "#F5C200";
       } else if (config?.type === "error") {
         return "#f00a1d";
       } else {

@@ -2,33 +2,66 @@ import {View, Text, ScrollView, Alert, Pressable} from "react-native";
 import React, {useEffect, useState} from "react";
 import OTPInput from "@/components/forms/OTPInput";
 import Button from "@/components/ui/Button";
+import {useLocalSearchParams, useRouter} from "expo-router";
+import apiEndpoints, {api} from "@/lib/axios";
+import {useToast} from "@/contexts/ToastProviders";
 
-export default function index() {
+export default function VerifyOTP() {
+  const {showToast} = useToast();
+  const router = useRouter();
+  const {email} = useLocalSearchParams();
   const [code, setCode] = useState("");
   const [isPinReady, setIsPinReady] = useState(false);
   const [resendDisabled, setResendDisabled] = useState(false);
   const [countdown, setCountdown] = useState(30);
+  const [loading, setLoading] = useState(false);
 
   const maximumLength = 6;
 
-  const handleVerifyOTP = () => {
-    if (isPinReady) {
-      Alert.alert("Success", `OTP Verified: ${code}`);
-      // Add your OTP verification logic here
-    } else {
+  // Handle OTP verification
+  const handleVerifyOTP = async () => {
+    if (!isPinReady) {
       Alert.alert("Error", "Please enter a valid OTP.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await apiEndpoints.verifyOTP(email as string, code);
+
+      showToast(response.data.message, "success");
+      router.push(`/login`);
+    } catch (error: any) {
+      console.log(error.response.data);
+      showToast(
+        error.response?.data?.non_field_errors[0] ||
+          "Verification failed. Please try again.",
+        "error"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   // Handle resend OTP
-  const handleResendOTP = () => {
-    // Reset the countdown
+  const handleResendOTP = async () => {
     setCountdown(30);
     setResendDisabled(true);
 
-    // Call your API to resend OTP
-    Alert.alert("OTP Resent", "A new OTP has been sent to your phone.");
-    // Add your resend OTP logic here (e.g., API call)
+    try {
+      const response = await api.post("/otp/request/", {email});
+
+      if (response.data.success) {
+        Alert.alert("OTP Resent", "A new OTP has been sent to your email.");
+      } else {
+        Alert.alert("Error", response.data.message);
+      }
+    } catch (error: any) {
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to resend OTP."
+      );
+    }
   };
 
   // Countdown timer
@@ -62,8 +95,9 @@ export default function index() {
         </Pressable>
 
         <Text className="text-primary text-4xl mb-14">
-          Enter the code sent to Your email address
+          Enter the code sent to {email}
         </Text>
+
         {/* OTP Input */}
         <OTPInput
           code={code}
@@ -71,13 +105,15 @@ export default function index() {
           maximumLength={maximumLength}
           setIsPinReady={setIsPinReady}
         />
+
         {/* Verify Button */}
         <View className="mt-40">
           {/* Resend OTP Button */}
           <Pressable
             onPress={handleResendOTP}
-            disabled={resendDisabled}
-            style={{opacity: resendDisabled ? 0.5 : 1}}
+            disabled={resendDisabled || loading}
+            style={{opacity: resendDisabled || loading ? 0.5 : 1}}
+            className="mb-6"
           >
             <Text className="text-primary text-center mt-4">
               {resendDisabled
@@ -87,9 +123,9 @@ export default function index() {
           </Pressable>
 
           <Button
-            title="Verify"
+            title={loading ? "Verifying..." : "Verify"}
             onPress={handleVerifyOTP}
-            disabled={!isPinReady}
+            disabled={!isPinReady || loading}
           />
         </View>
       </ScrollView>

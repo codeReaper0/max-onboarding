@@ -41,7 +41,7 @@ const InputField: React.FC<InputFieldProps> = ({
   const handleDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);
     if (selectedDate) {
-      const formattedDate = selectedDate.toISOString();
+      const formattedDate = selectedDate.toISOString().split("T")[0];
       setDate(formattedDate);
       if (setFieldValue) {
         setFieldValue(name, formattedDate); // Update Formik state

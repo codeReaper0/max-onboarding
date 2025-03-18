@@ -1,25 +1,55 @@
-import {Text, ScrollView, View, Pressable} from "react-native";
+import {Text, ScrollView, View} from "react-native";
 import React, {useState} from "react";
 import {Formik} from "formik";
 import * as Yup from "yup";
 import InputField from "@/components/forms/Input";
 import Button from "@/components/ui/Button";
-import {Picker} from "@react-native-picker/picker";
-import Checkbox from "expo-checkbox";
-import SelectField from "@/components/forms/SelectField";
-import {Link} from "expo-router";
+import {Link, useRouter} from "expo-router";
+import {useToast} from "@/contexts/ToastProviders";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {useAuth} from "@/contexts/AuthContexts";
+import apiEndpoints from "@/lib/axios";
 
+// Define the validation schema
 const schema = Yup.object({
   email: Yup.string().email().required("Email is required"),
   password: Yup.string().required("Password is required"),
 });
 
+// Define the initial values
 const initialValues = {
   email: "",
   password: "",
 };
 
-export default function LoginPage() {
+const LoginPage: React.FC = () => {
+  const {showToast} = useToast();
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const {login} = useAuth();
+
+  const handleLogin = async (values: {email: string; password: string}) => {
+    setLoading(true);
+    try {
+      const response = await apiEndpoints.login(values);
+      console.log(response.data);
+      await login(response.data.access, response.data.user);
+
+      showToast("Login successful!", "success");
+      router.replace("/home");
+    } catch (error: any) {
+      console.log(error);
+      console.log(error.response.data);
+      showToast(
+        error.response?.data?.non_field_errors[0] ||
+          "An error occurred. Please try again.",
+        "error"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={{flex: 1, backgroundColor: "#000"}}>
       <ScrollView
@@ -31,9 +61,7 @@ export default function LoginPage() {
         <Formik
           initialValues={initialValues}
           validationSchema={schema}
-          onSubmit={(values) => {
-            console.log(values);
-          }}
+          onSubmit={handleLogin}
         >
           {({
             handleChange,
@@ -42,7 +70,6 @@ export default function LoginPage() {
             values,
             errors,
             touched,
-            setFieldValue,
             isValid,
           }) => (
             <View>
@@ -78,12 +105,12 @@ export default function LoginPage() {
 
               {/* Submit Button */}
               <Button
-                title="Log in"
+                title={loading ? "Logging in..." : "Log in"}
                 onPress={handleSubmit}
-                disabled={!isValid}
+                disabled={!isValid || loading}
               />
               <Text className="text-white/70 font-interSemiBold text-sm text-center my-3">
-                Already have an account?{" "}
+                Don't have an account?{" "}
                 <Link className="text-primary" href={"/register"}>
                   Sign up
                 </Link>
@@ -94,4 +121,6 @@ export default function LoginPage() {
       </ScrollView>
     </View>
   );
-}
+};
+
+export default LoginPage;

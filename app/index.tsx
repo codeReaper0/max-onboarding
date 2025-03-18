@@ -1,9 +1,16 @@
 import React, {useRef, useState, useCallback, useEffect} from "react";
-import {View, FlatList, Animated, useWindowDimensions} from "react-native";
+import {
+  View,
+  FlatList,
+  Animated,
+  useWindowDimensions,
+  Text,
+} from "react-native";
 import OnboardingData from "constants/onboarding";
 import {OnboardingItem} from "components/ui/OnboardingItem";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {useRouter} from "expo-router";
+import {useAuth} from "@/contexts/AuthContexts";
 
 export default function Index() {
   const router = useRouter();
@@ -14,8 +21,8 @@ export default function Index() {
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(
     null
   );
+  const {user, loading} = useAuth();
 
-  // Handle scroll end to ensure currentIndex is correct
   const handleScrollEnd = useCallback(
     (e: any) => {
       const contentOffset = e.nativeEvent.contentOffset.x;
@@ -53,22 +60,33 @@ export default function Index() {
   }, [router]);
 
   useEffect(() => {
-    const checkOnboard = async () => {
+    const checkOnboardAndAuth = async () => {
       const status = await AsyncStorage.getItem("hasSeenOnboarding");
       setHasSeenOnboarding(status === "true");
-      //   await AsyncStorage.setItem("hasSeenOnboarding", "false");
+
+      // If the user is already authenticated, redirect to the home screen
+      if (user) {
+        router.replace("/home");
+      }
     };
-    checkOnboard();
-  }, []);
+    checkOnboardAndAuth();
+  }, [user, router]);
 
   useEffect(() => {
-    // AsyncStorage.setItem("hasSeenOnboarding", "false");
-    if (hasSeenOnboarding !== null) {
-      if (hasSeenOnboarding) {
-        router.replace("/login");
-      }
+    // If the user has already seen the onboarding, redirect to the login screen
+    if (hasSeenOnboarding && !user) {
+      router.replace("/login");
     }
-  }, [hasSeenOnboarding, router]);
+  }, [hasSeenOnboarding, user, router]);
+
+  // Show a loading spinner while checking authentication and onboarding status
+  if (loading || hasSeenOnboarding === null) {
+    return (
+      <View className="h-full flex items-center justify-center bg-black">
+        <Text className="text-white">Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <View

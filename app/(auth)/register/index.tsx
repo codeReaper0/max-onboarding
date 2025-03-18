@@ -1,4 +1,4 @@
-import {Text, ScrollView, View, Pressable} from "react-native";
+import {Text, ScrollView, View, Pressable, Alert} from "react-native";
 import React, {useState} from "react";
 import {Formik} from "formik";
 import * as Yup from "yup";
@@ -7,7 +7,9 @@ import Button from "@/components/ui/Button";
 import {Picker} from "@react-native-picker/picker";
 import Checkbox from "expo-checkbox";
 import SelectField from "@/components/forms/SelectField";
-import {Link} from "expo-router";
+import {Link, useRouter} from "expo-router";
+import apiEndpoints from "@/lib/axios";
+import {useToast} from "@/contexts/ToastProviders";
 
 const schema = Yup.object({
   first_name: Yup.string().required("First name is required"),
@@ -54,7 +56,45 @@ const initialValues = {
 };
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const {showToast} = useToast();
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+  // Calculate age from DOB
+  const calculateAge = (dob: string) => {
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+    return age;
+  };
+
+  // Handle form submission
+  const handleRegister = async (values: any) => {
+    setLoading(true);
+    try {
+      const response = await apiEndpoints.register(values);
+      showToast(response.data.message, "success");
+      router.push(`/verify?email=${values.email}`);
+    } catch (error: any) {
+      showToast(
+        error.response?.data?.email[0] ||
+          error.response?.data?.username[0] ||
+          "Registration failed. Please try again.",
+        "error"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={{flex: 1, backgroundColor: "#000"}}>
       <ScrollView
@@ -67,7 +107,19 @@ export default function RegisterPage() {
           initialValues={initialValues}
           validationSchema={schema}
           onSubmit={(values) => {
-            console.log(values);
+            if (step === 1) {
+              setStep(2); // Move to Step 2
+            } else {
+              const age = calculateAge(values.dob);
+              if (age < 18) {
+                Alert.alert(
+                  "Error",
+                  "You must be 18 years or older to register."
+                );
+              } else {
+                handleRegister(values); // Call the register endpoint
+              }
+            }
           }}
         >
           {({
@@ -165,6 +217,7 @@ export default function RegisterPage() {
                   bodyClass="mb-4"
                   extraClass="bg-white/5"
                 />
+
                 {/* Date of Birth Input */}
                 <InputField
                   label="Date of Birth"
@@ -175,7 +228,7 @@ export default function RegisterPage() {
                   onBlur={handleBlur("dob")}
                   error={errors.dob}
                   touched={touched.dob}
-                  placeholder="00-00-0000"
+                  placeholder="YYYY-MM-DD"
                   setFieldValue={setFieldValue}
                 />
 
@@ -215,7 +268,7 @@ export default function RegisterPage() {
                   onBlur={handleBlur("confirm_password")}
                   error={errors.confirm_password}
                   touched={touched.confirm_password}
-                  placeholder="12345678900"
+                  placeholder="Confirm your password"
                 />
 
                 {/* Agree Checkbox */}
@@ -253,7 +306,7 @@ export default function RegisterPage() {
               </View>
             ) : (
               <View>
-                <Pressable className="mb-12">
+                <Pressable className="mb-12" onPress={() => setStep(1)}>
                   <Text className="text-primary">Back</Text>
                 </Pressable>
                 <Text className="text-primary text-3xl font-robotoSemiBold text-center mb-14">
@@ -262,10 +315,10 @@ export default function RegisterPage() {
 
                 <View className="border border-primary rounded-2xl mx-6 bg-white/5 p-4 mb-10">
                   <Text className="text-primary text-2xl font-interMedium text-center mb-1">
-                    28 years old
+                    {calculateAge(values.dob)} years old
                   </Text>
                   <Text className="text-white/70 text-sm text-center">
-                    (February 18, 1990)
+                    ({new Date(values.dob).toLocaleDateString()})
                   </Text>
                 </View>
 
@@ -276,9 +329,10 @@ export default function RegisterPage() {
                 </Text>
 
                 <Button
-                  title="Yes i confirm"
+                  title={loading ? "Submitting..." : "Yes, I confirm"}
                   onPress={handleSubmit}
                   className="mt-[200px]"
+                  disabled={loading}
                 />
               </View>
             )

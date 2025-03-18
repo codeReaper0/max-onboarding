@@ -13,6 +13,7 @@ import {
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
 import {useEffect} from "react";
+import {AuthProvider} from "@/contexts/AuthContexts";
 
 const customFonts = {
   "Roboto-Regular": require("assets/fonts/Roboto-Regular.ttf"),
@@ -51,14 +52,16 @@ export default function RootLayout() {
   }
 
   return (
-    <ToastProvider>
-      <SafeAreaView style={{flex: 1}}>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-          }}
-        />
-      </SafeAreaView>
-    </ToastProvider>
+    <AuthProvider>
+      <ToastProvider>
+        <SafeAreaView style={{flex: 1}}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+            }}
+          />
+        </SafeAreaView>
+      </ToastProvider>
+    </AuthProvider>
   );
 }
